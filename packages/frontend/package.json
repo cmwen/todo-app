@@ -1,31 +1,44 @@
 {
   "name": "@todo-app/frontend",
   "version": "1.0.0",
-  "description": "Next.js frontend for the TODO app with WebSocket support",
   "private": true,
+  "description": "Next.js frontend with App Router and WebSocket integration",
   "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "lint": "next lint",
-    "start": "next start",
-    "type-check": "tsc --noEmit"
+    "dev": "next dev --turbopack --port 3000",
+    "build": "next build --turbopack",
+    "start": "next start --port 3000",
+    "lint": "eslint . --fix",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next out",
+    "prepare": "next-ws patch"
   },
   "dependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "15.1.0",
-    "next": "15.1.0",
-    "react": "^18",
-    "react-dom": "^18",
-    "socket.io-client": "^4.7.5",
-    "typescript": "^5",
-    "tailwindcss": "^3.4.1",
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.24"
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "next": "15.5.2",
+    "next-ws": "^1.0.0",
+    "ws": "^8.18.0",
+    "@radix-ui/react-checkbox": "^1.0.4",
+    "@radix-ui/react-dialog": "^1.0.5",
+    "@radix-ui/react-select": "^2.0.0",
+    "@radix-ui/react-toast": "^1.1.5",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "lucide-react": "^0.441.0",
+    "tailwind-merge": "^2.5.2",
+    "zod": "^3.22.4",
+    "@todo-app/shared": "workspace:*"
   },
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.7"
+    "typescript": "^5.3.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/ws": "^8.5.10",
+    "@tailwindcss/postcss": "^4.1.0",
+    "tailwindcss": "^4.1.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "15.5.2",
+    "@eslint/eslintrc": "^3.0.0"
   }
 }

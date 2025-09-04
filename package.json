@@ -1,56 +1,46 @@
 {
-  "name": "todo-app",
+  "name": "@todo-app/root",
   "version": "1.0.0",
-  "description": "A modern TODO application monorepo with Next.js frontend and Node.js backend with WebSocket support",
   "private": true,
+  "description": "Modern TODO app with pnpm workspace, Next.js App Router, and WebSocket real-time sync",
   "scripts": {
-    "build": "pnpm -r build",
-    "build:backend": "pnpm --filter @todo-app/backend build",
-    "build:frontend": "pnpm --filter @todo-app/frontend build",
-    "dev": "pnpm -r --parallel dev",
-    "dev:backend": "pnpm --filter @todo-app/backend dev",
+    "dev": "pnpm --parallel --recursive dev",
     "dev:frontend": "pnpm --filter @todo-app/frontend dev",
-    "start": "pnpm -r --parallel start",
-    "start:backend": "pnpm --filter @todo-app/backend start",
+    "dev:backend": "pnpm --filter @todo-app/backend dev",
+    "build": "pnpm --recursive build",
+    "build:frontend": "pnpm --filter @todo-app/frontend build",
+    "build:backend": "pnpm --filter @todo-app/backend build",
+    "start": "pnpm --parallel --recursive start",
     "start:frontend": "pnpm --filter @todo-app/frontend start",
-    "test": "pnpm -r test",
-    "test:backend": "pnpm --filter @todo-app/backend test",
-    "lint": "pnpm -r lint",
-    "lint:fix": "pnpm -r lint:fix",
-    "format": "pnpm --filter @todo-app/backend format",
-    "format:check": "pnpm --filter @todo-app/backend format:check",
-    "clean": "pnpm -r clean && rimraf node_modules",
-    "install:all": "pnpm install"
+    "start:backend": "pnpm --filter @todo-app/backend start",
+    "test": "pnpm --recursive test",
+    "type-check": "pnpm --recursive type-check",
+    "lint": "pnpm --recursive lint",
+    "clean": "pnpm --recursive clean",
+    "install-deps": "pnpm install"
   },
-  "keywords": [
-    "todo",
-    "monorepo",
-    "nextjs",
-    "nodejs",
-    "websocket",
-    "typescript",
-    "sqlite",
-    "pnpm"
-  ],
-  "author": "TODO App Team",
-  "license": "MIT",
-  "workspaces": [
-    "packages/*"
-  ],
   "devDependencies": {
-    "rimraf": "^5.0.5"
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0",
+    "prettier": "^3.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
   },
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"
   },
-  "packageManager": "pnpm@10.15.1",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/cmwen/todo-app.git"
-  },
-  "bugs": {
-    "url": "https://github.com/cmwen/todo-app/issues"
-  },
-  "homepage": "https://github.com/cmwen/todo-app#readme"
+  "packageManager": "pnpm@8.15.0",
+  "keywords": [
+    "todo",
+    "next.js",
+    "websocket",
+    "pnpm",
+    "monorepo",
+    "typescript",
+    "real-time"
+  ],
+  "author": "Todo App Team",
+  "license": "MIT"
 }
