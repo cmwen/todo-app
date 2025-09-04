@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # Web interface
+  todo-web:
+    build:
+      context: .
+      target: web
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./database:/app/database
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/database/todos.db
+    restart: unless-stopped
+    networks:
+      - todo-network
+
+  # MCP server
+  todo-mcp:
+    build:
+      context: .
+      target: mcp
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./database:/app/database
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/database/todos.db
+    restart: unless-stopped
+    networks:
+      - todo-network
+
+  # CLI utility (for one-off commands)
+  todo-cli:
+    build:
+      context: .
+      target: cli
+    volumes:
+      - ./database:/app/database
+    environment:
+      - DATABASE_PATH=/app/database/todos.db
+    profiles:
+      - cli
+    networks:
+      - todo-network
+
+networks:
+  todo-network:
+    driver: bridge
+
+volumes:
+  database:
+    driver: local
