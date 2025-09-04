@@ -1,4 +1,6 @@
 import express, { Express, Request, Response } from 'express';
+import http from 'http';
+import { Server as SocketIOServer } from 'socket.io';
 import path from 'path';
 import { AppContainer } from '../../container';
 import { logger } from '../../shared';
@@ -12,14 +14,24 @@ export interface WebServerOptions {
 
 export class WebServer {
   private app: Express;
-  private server: any;
+  private server: http.Server;
+  private io: SocketIOServer;
   private container: AppContainer;
 
   constructor(container: AppContainer) {
     this.container = container;
     this.app = express();
+    this.server = http.createServer(this.app);
+    this.io = new SocketIOServer(this.server, {
+      cors: {
+        origin: process.env.FRONTEND_URL || "http://localhost:3000",
+        methods: ["GET", "POST"]
+      }
+    });
+    
     this.setupMiddleware();
     this.setupRoutes();
+    this.setupWebSocket();
   }
 
   private setupMiddleware(): void {
@@ -29,12 +41,50 @@ export class WebServer {
     // Parse URL-encoded bodies
     this.app.use(express.urlencoded({ extended: true }));
     
+    // CORS middleware
+    this.app.use((req, res, next) => {
+      res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:3000');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+      if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+      } else {
+        next();
+      }
+    });
+    
     // Serve static files
     this.app.use(express.static(path.join(__dirname, 'public')));
     
     // Set view engine (if using templates)
     this.app.set('view engine', 'html');
     this.app.set('views', path.join(__dirname, 'views'));
+  }
+
+  private setupWebSocket(): void {
+    this.io.on('connection', (socket) => {
+      logger.info(`Client connected: ${socket.id}`);
+
+      socket.on('disconnect', () => {
+        logger.info(`Client disconnected: ${socket.id}`);
+      });
+
+      // Send initial todos to the connected client
+      this.sendInitialTodos(socket);
+    });
+  }
+
+  private async sendInitialTodos(socket: any): Promise<void> {
+    try {
+      const todos = await this.container.todoService.getAllTodos();
+      socket.emit('initial_todos', todos);
+    } catch (error) {
+      logger.error('Error sending initial todos', error as Error);
+    }
+  }
+
+  private emitTodoEvent(event: string, todo: Todo): void {
+    this.io.emit(event, todo);
   }
 
   private setupRoutes(): void {
@@ -95,6 +145,9 @@ export class WebServer {
         description: description?.trim() || ''
       });
 
+      // Emit WebSocket event
+      this.emitTodoEvent('todo_created', todo);
+
       res.status(201).json(todo);
     } catch (error) {
       logger.error('Error creating todo', error as Error);
@@ -112,6 +165,9 @@ export class WebServer {
         description: description?.trim()
       });
 
+      // Emit WebSocket event
+      this.emitTodoEvent('todo_updated', todo);
+
       res.json(todo);
     } catch (error) {
       logger.error('Error updating todo', error as Error);
@@ -126,7 +182,14 @@ export class WebServer {
   private async deleteTodo(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
+      
+      // Get the todo before deleting to emit the event with complete data
+      const todo = await this.container.todoService.getTodoById(id);
       await this.container.todoService.deleteTodo(id);
+
+      // Emit WebSocket event
+      this.emitTodoEvent('todo_deleted', todo);
+
       res.status(204).send();
     } catch (error) {
       logger.error('Error deleting todo', error as Error);
@@ -142,6 +205,10 @@ export class WebServer {
     try {
       const { id } = req.params;
       const todo = await this.container.todoService.toggleTodo(id);
+
+      // Emit WebSocket event
+      this.emitTodoEvent('todo_toggled', todo);
+
       res.json(todo);
     } catch (error) {
       logger.error('Error toggling todo', error as Error);
@@ -497,12 +564,14 @@ export class WebServer {
 
   async start(options: WebServerOptions): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.server = this.app.listen(options.port, options.host, () => {
+      this.server.listen(options.port, options.host, () => {
         const url = `http://${options.host}:${options.port}`;
         logger.info(`Web server started at ${url}`);
+        logger.info(`WebSocket server started at ws://${options.host}:${options.port}`);
         console.log(`\n🌐 TODO App Web Server`);
         console.log(`   Local:    ${url}`);
         console.log(`   Network:  http://${this.getNetworkAddress()}:${options.port}`);
+        console.log(`   WebSocket: ws://${options.host}:${options.port}`);
         console.log('\n   Press Ctrl+C to stop\n');
 
         if (options.autoOpen) {
@@ -520,14 +589,14 @@ export class WebServer {
   }
 
   async stop(): Promise<void> {
-    if (this.server) {
-      return new Promise((resolve) => {
+    return new Promise((resolve) => {
+      this.io.close(() => {
         this.server.close(() => {
-          logger.info('Web server stopped');
+          logger.info('Web server and WebSocket server stopped');
           resolve();
         });
       });
-    }
+    });
   }
 
   private openBrowser(url: string): void {

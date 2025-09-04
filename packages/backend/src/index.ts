@@ -44,7 +44,7 @@ async function startWebMode(args: string[]): Promise<void> {
   program
     .name('todo-app web')
     .description('Start the TODO app web server')
-    .option('-p, --port <port>', 'Port to run the server on', '3000')
+    .option('-p, --port <port>', 'Port to run the server on', '3001')
     .option('-h, --host <host>', 'Host to bind the server to', 'localhost')
     .option('--no-open', 'Do not auto-open browser')
     .option('-v, --verbose', 'Enable verbose logging')
