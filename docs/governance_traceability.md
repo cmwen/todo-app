@@ -13,11 +13,11 @@ Generated to satisfy the Governance Agent Definition of Done (DoD) gates. This f
 | Required artifact | Path | Present | Notes |
 |---|---:|:---:|---|
 | Vision | `docs/vision.md` | ✅ | Contains vision, user scenarios, success criteria. |
-| Product backlog | `docs/product_backlog.md` | ❌ | Missing — backlog not present in docs/. Recommend owner: Product — owner TBD. |
+| Product backlog | `docs/product_backlog.md` | ✅ | Present. Initial backlog added; Product owner should expand items and add priorities/dates. |
 | Design | `docs/design.md` | ✅ | Contains high-level design and decisions. |
 | Technical design | `docs/technical-design.md` | ✅ | Contains interfaces, schema, DI and roadmap. |
 | Implementation summary | `docs/implementation-summary.md` | ✅ | Contains status and implementation notes. |
-| QA plan | `docs/qa_plan.md` | ❌ | Missing — no qa_plan.md detected. Recommend owner: QA/Eng — owner TBD. |
+| QA plan | `docs/qa_plan.md` | ✅ | Present. QA plan added with acceptance criteria and minimal tests. |
 | Governance traceability | `docs/governance_traceability.md` | ✅ | This file. |
 
 ### Repository hygiene (blocking gate)
@@ -43,8 +43,7 @@ Notes: There are no top-level `tests/` folder. Packages reference `test` scripts
 
 ### Gating decisions
 
-- Documentation Completeness Gate: BLOCKING — `docs/product_backlog.md` and `docs/qa_plan.md` are missing. Decision: Do not proceed to release until Product owner and QA owner add these artifacts or an explicit waiver is recorded here.
-
+- Documentation Completeness Gate: UPDATED — required docs are present. Product owner should expand backlog items; QA should replace placeholder tests with real smoke/integration tests before release.
 - Repository Hygiene Gate: PASS — `.gitignore` and package structure present.
 
 - Test & Quality Gate: CONDITIONAL — unit/smoke tests are required for new features. No tests detected; require at least one smoke test for backend and one unit test for shared types before final release.
