@@ -145,7 +145,7 @@ export class WebSocketHandler {
   private async handleListTodos(client: WebSocket, message: ClientMessage): Promise<void> {
     try {
       const validatedMessage = ListTodosMessageSchema.parse(message);
-      const todos = await this.db.listTodos(validatedMessage.payload || {});
+  const todos = await this.db.listTodos(validatedMessage.payload ?? {});
       
       const response: ServerMessage = {
         id: generateId(),

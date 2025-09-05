@@ -10,8 +10,7 @@
     "start": "next start --port 3000",
     "lint": "eslint . --fix",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf .next out",
-    "prepare": "next-ws patch"
+  "clean": "rm -rf .next out"
   },
   "dependencies": {
     "react": "19.1.0",
@@ -38,8 +37,10 @@
     "@types/ws": "^8.5.10",
     "@tailwindcss/postcss": "^4.1.0",
     "tailwindcss": "^4.1.0",
-    "eslint": "^9.0.0",
+  "eslint": "^9.0.0",
     "eslint-config-next": "15.5.2",
-    "@eslint/eslintrc": "^3.0.0"
+  "@eslint/eslintrc": "^3.0.0",
+  "@typescript-eslint/eslint-plugin": "^8.0.0",
+  "@typescript-eslint/parser": "^8.0.0"
   }
 }

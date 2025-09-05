@@ -22,11 +22,20 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm@8
 
+      - name: Setup pnpm store
+        run: pnpm store path
+
       - name: Install dependencies
         run: pnpm install
 
       - name: Run tests
         run: pnpm test
+
+      - name: Type check
+        run: pnpm type-check
+
+      - name: Lint
+        run: pnpm lint
 
       - name: Verify required docs
         run: |

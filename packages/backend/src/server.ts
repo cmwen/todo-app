@@ -18,7 +18,7 @@ class TodoWebSocketServer {
   private clients: Set<WebSocket> = new Set();
 
   constructor() {
-    this.db = new TodoDatabase(DATABASE_PATH);
+  this.db = new TodoDatabase(DATABASE_PATH);
     this.wss = new WebSocketServer({ port: PORT });
     this.handler = new WebSocketHandler(this.db, this.broadcast.bind(this));
     
@@ -74,7 +74,7 @@ class TodoWebSocketServer {
   private async sendInitialData(ws: WebSocket): Promise<void> {
     try {
       // Send current todos to newly connected client
-      const todos = await this.db.listTodos({ limit: 100 });
+  const todos = await this.db.listTodos({ limit: 100, offset: 0 });
       const message: ServerMessage = {
         id: 'initial-data',
         type: 'todos_listed',

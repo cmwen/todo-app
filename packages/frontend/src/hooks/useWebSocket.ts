@@ -6,7 +6,8 @@ import {
   ServerMessage, 
   ConnectionState,
   generateId,
-  generateTimestamp 
+  generateTimestamp,
+  ClientMessageType 
 } from '@todo-app/shared';
 
 export interface UseWebSocketOptions {
@@ -115,7 +116,7 @@ export function useWebSocket(options: UseWebSocketOptions) {
     setConnectionState('disconnected');
   }, []);
 
-  const sendMessage = useCallback((type: string, payload: any = {}) => {
+  const sendMessage = useCallback((type: ClientMessageType, payload: unknown = {}) => {
     const message: ClientMessage = {
       id: generateId(),
       type,
