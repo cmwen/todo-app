@@ -1,58 +1,50 @@
 # TODO App Design Document
 
-**[Design → Product]** This design addresses all Product backlog items with a modern pnpm monorepo architecture.  
-**[Design → Execution]** Implementation guide provided with specific tooling and dependency management.
+**[Design → Product]** Align with Vision: one executable that runs in multiple modes (CLI default, `web`, `mcp`) while sharing core logic.  
+**[Design → Execution]** Specify architecture, mode contracts, NPX/bin packaging, and a phased plan to implement missing parts (CLI + MCP + SQLite migrations) in this pnpm monorepo.
 
 ## Executive Summary
 
-This design transforms the existing TODO app into a modern pnpm workspace monorepo with:
-- **Frontend**: Next.js 15 App Router with WebSocket real-time updates
-- **Backend**: Node.js WebSocket server with SQLite persistence
-- **Architecture**: Clean separation with shared TypeScript types and utilities
+Deliver a single CLI entry point that orchestrates three modes:
+- CLI Mode (default): terminal-based todo management
+- Web Mode (`web`): starts the existing WebSocket-backed server/UI
+- MCP Mode (`mcp`): stdio server exposing todo tools to AI agents
+
+Core business logic is shared across modes via the `shared/` package and backend services. Persistence moves from the current in-memory store to SQLite with migrations. Commander.js powers the CLI; NPX-compatible bin packaging enables `npx todo-app`.
 
 ## Design Approaches Considered
 
-### Approach 1: Single Package with Multiple Modes (Current)
-- **Pros**: Simple deployment, single codebase
-- **Cons**: Mixed concerns, harder to scale teams, monolithic dependencies
-- **Trade-off**: Simplicity vs. modularity
+### Approach A: Single Bin Orchestrator (Recommended)
+- Description: A dedicated `cli` package provides the bin (`todo-app`). It imports reusable modules from `backend` and (new) `mcp` to start those modes. Core logic and types live in `shared`.
+- Pros: Matches Vision (one entrypoint), clear UX (`npx todo-app`, `npx todo-app web`, `npx todo-app mcp`), isolates mode-specific deps, easy to test.
+- Cons: Adds one package, needs small public APIs between `cli` and modes.
+- Trade-off: Slightly more setup for superior UX and maintainability.
 
-### Approach 2: Pnpm Workspace Monorepo (Recommended)
-- **Pros**: Clear separation of concerns, independent deployments, shared code reuse, better team scalability
-- **Cons**: More complex setup, workspace management overhead
-- **Trade-off**: Initial complexity for long-term maintainability
+### Approach B: Backend-as-Orchestrator
+- Description: Put bin in `backend` and have it boot CLI, web, or MCP.
+- Pros: Fewer packages.
+- Cons: Blurs web server vs. CLI concerns, risk of backend pulling CLI-only deps, harder to keep MCP isolated.
+- Trade-off: Simpler structure, lower modularity.
+
+We choose Approach A for clear boundaries and best developer experience.
 
 ## Architecture Overview
 
 ```
-todo-app/                          # Root workspace
-├── packages/
-│   ├── frontend/                  # Next.js 15 App Router
-│   │   ├── app/                   # App Router structure
-│   │   │   ├── layout.tsx         # Root layout with providers
-│   │   │   ├── page.tsx           # Main todo interface
-│   │   │   ├── api/               # API routes (optional)
-│   │   │   └── components/        # UI components
-│   │   ├── hooks/                 # Custom React hooks
-│   │   ├── lib/                   # WebSocket client, utils
-│   │   ├── types/                 # Frontend-specific types
-│   │   └── package.json           # Frontend dependencies
-│   ├── backend/                   # WebSocket server
-│   │   ├── src/
-│   │   │   ├── server.ts          # WebSocket server entry
-│   │   │   ├── handlers/          # WebSocket message handlers
-│   │   │   ├── database/          # SQLite setup & migrations
-│   │   │   ├── services/          # Business logic
-│   │   │   └── types/             # Backend-specific types
-│   │   └── package.json           # Backend dependencies
-│   └── shared/                    # Shared utilities & types
-│       ├── types/                 # Common TypeScript interfaces
-│       ├── utils/                 # Shared utility functions
-│       └── package.json           # Shared dependencies
-├── pnpm-workspace.yaml           # Workspace configuration
-├── package.json                  # Root package.json
-├── tsconfig.json                 # Root TypeScript config
-└── turbo.json                    # Build orchestration (optional)
+Single CLI Executable (todo-app)
+├─ CLI Mode (default) — Commander.js
+├─ Web Mode (web) — starts backend WS server + optionally open UI
+└─ MCP Mode (mcp) — stdio server (MCP tools)
+
+Shared Service Layer → SQLite (better-sqlite3 + migrations)
+```
+
+Proposed additions in monorepo:
+
+```
+packages/
+  cli/     # NEW: bin + Commander.js commands
+  mcp/     # NEW: MCP stdio server tools
 ```
 
 ## Technology Stack & Dependencies
@@ -72,9 +64,16 @@ todo-app/                          # Root workspace
 
 ### Backend Stack
 - **WebSocket Server**: ws library with Node.js
-- **Database**: better-sqlite3 for persistence
+- **Database**: better-sqlite3 for SQLite + migration runner
 - **Validation**: zod for message validation
 - **Logging**: pino for structured logging
+
+### CLI Stack (New)
+- Commander.js for commands and mode selection
+- NPX/bin packaging for `npx todo-app`
+
+### MCP Stack (New)
+- @modelcontextprotocol/sdk to expose tools via stdio
 
 ## Real-time Architecture
 
@@ -477,3 +476,88 @@ dependencies:
 
 **[Design → QA]** All design decisions require validation through the testing scenarios outlined in the risk assessment.  
 **[Design → Execution]** Implementation should follow the phased approach with continuous integration of shared types and workspace dependency management.
+
+---
+
+## Mode Flows and Contracts (Vision Alignment)
+
+### CLI Mode Flow (Default)
+```
+Terminal (Commander)      Service Layer                Database
+  │                      │                          │
+  ├─ add --title ───────►│                          │
+  │                      ├─ validate + create ────► │
+  │                      │                          ├─ INSERT
+  │                      │◄──────────────────────────┤
+  │◄─ print result ◄─────┤                          │
+  │
+  └─ list --status ... ─►│ ── query ───────────────►│
+        │◄─ rows ─────────────────┤
+  ◄─ render table/text ◄──┘
+```
+
+Contract
+- Inputs: subcommands and flags (title, description, status filters, id)
+- Output: human-readable by default; `--json` emits machine-readable JSON
+- Errors: exit code non-zero; message printed (+ JSON error when `--json`)
+
+### MCP Mode Flow (stdio)
+```
+MCP Client            MCP Server (tools)      Service Layer        DB
+   │                         │                    │                │
+   ├─ call create_todo ─────►│                    │                │
+   │                         ├─ validate input ──►│                │
+   │                         │                    ├─ create ─────►│
+   │                         │                    │◄───────────────┤
+   │◄─ result (todo) ◄───────┤                    │                │
+```
+
+Tools (initial set)
+- `create_todo`, `list_todos`, `update_todo`, `delete_todo`, `toggle_todo_completion`
+- Inputs/Outputs mirror shared types; all inputs validated (zod)
+
+## CLI Architecture (New)
+
+- Entrypoint: `packages/cli/bin/todo-app` (NPX compatible, shebang)
+- Mode commands: `web`, `mcp`; default runs interactive CLI
+- Shared options: `--db <path>`, `--json`, `--log-level <level>`
+- Config precedence: flags > env > `~/.todo-app/config.json` > defaults
+
+## MCP Architecture (New)
+
+- Uses `@modelcontextprotocol/sdk` in `packages/mcp`
+- Exposes tools listed above; graceful shutdown on SIGINT
+- Logs to stderr; tool responses on stdout per MCP conventions
+
+## SQLite Migration Strategy (New)
+
+- Table: `migrations(version TEXT PRIMARY KEY, applied_at DATETIME)`
+- On startup, apply pending files in `backend/src/database/migrations/*.sql`
+- Filename pattern: `YYYYMMDDHHmm_description.sql`
+- Forward-only for POC; add `down` later if needed
+- Enable WAL mode; tune PRAGMAs (synchronous=NORMAL)
+
+## .gitignore Additions (New)
+
+- `data/*.db`
+- `data/*.db-journal`
+- `packages/backend/src/database/migrations/.cache`
+
+## Updated Roadmap mapped to Vision Next Steps
+
+1) Implementation: NPX/bin config → packages/cli with `bin: { "todo-app": "bin/todo-app" }` [Design → Execution]
+2) Main CLI entry with Commander + mode detection (default CLI, `web`, `mcp`) [Design → Execution]
+3) CLI CRUD commands wired to service; `--json` output [Design → Execution]
+4) Web mode orchestration (start backend; optional `--open`) [Design → Execution]
+5) MCP mode (stdio server + tool mapping) [Design → Execution]
+6) SQLite + migrations replace in-memory store [Design → Execution]
+7) Tests (unit, CLI golden, MCP tool, E2E) and docs update [Design → QA]
+
+## Traceability to Vision & Backlog
+
+- Single executable with modes → CLI bin + `web`/`mcp` commands
+- Commander.js for CLI parsing → Adopted
+- SQLite with migration support → New migration plan
+- MCP stdio server → New `packages/mcp`
+- NPX compatibility → Bin packaging in `packages/cli`
+- Documentation/examples per mode → This document + README to be updated

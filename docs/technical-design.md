@@ -4,76 +4,21 @@
 
 ```
 todo-app/
-├── src/
-│   ├── core/                    # Core business logic (shared)
-│   │   ├── models/              # Data models and types
-│   │   │   ├── todo.ts
-│   │   │   ├── index.ts
-│   │   ├── repositories/        # Data access layer
-│   │   │   ├── todo-repository.ts
-│   │   │   ├── base-repository.ts
-│   │   │   └── index.ts
-│   │   ├── services/            # Business logic services
-│   │   │   ├── todo-service.ts
-│   │   │   ├── validation-service.ts
-│   │   │   └── index.ts
-│   │   ├── database/            # Database configuration
-│   │   │   ├── connection.ts
-│   │   │   ├── migrations/
-│   │   │   └── index.ts
-│   │   └── errors/              # Custom error types
-│   │       ├── todo-errors.ts
-│   │       └── index.ts
-│   ├── interfaces/              # UI implementations
-│   │   ├── cli/                 # Command line interface
-│   │   │   ├── commands/
-│   │   │   │   ├── add.ts
-│   │   │   │   ├── list.ts
-│   │   │   │   ├── edit.ts
-│   │   │   │   ├── delete.ts
-│   │   │   │   └── done.ts
-│   │   │   ├── cli.ts
-│   │   │   └── index.ts
-│   │   ├── web/                 # Web application
-│   │   │   ├── routes/
-│   │   │   │   ├── todos.ts
-│   │   │   │   └── index.ts
-│   │   │   ├── middleware/
-│   │   │   ├── public/          # Static files
-│   │   │   ├── views/           # HTML templates
-│   │   │   ├── app.ts
-│   │   │   └── server.ts
-│   │   └── mcp/                 # MCP server
-│   │       ├── tools/
-│   │       │   ├── todo-tools.ts
-│   │       │   └── index.ts
-│   │       ├── server.ts
-│   │       └── index.ts
-│   ├── shared/                  # Shared utilities
-│   │   ├── logger.ts
-│   │   ├── config.ts
-│   │   └── utils.ts
-│   └── types/                   # Shared type definitions
-│       ├── common.ts
-│       └── index.ts
-├── tests/                       # Test files
-│   ├── core/
-│   ├── interfaces/
-│   └── integration/
-├── docs/                        # Documentation
-├── database/                    # Database files
-├── dist/                        # Compiled output
-├── scripts/                     # Build and utility scripts
-├── docker/                      # Docker configurations
+├── packages/
+│   ├── frontend/                 # Next.js UI (App Router)
+│   ├── backend/                  # WebSocket server + DB access
+│   ├── shared/                   # Shared types, schemas, helpers
+│   ├── cli/            (planned) # Bin + Commander.js
+│   └── mcp/            (planned) # MCP stdio server
+├── docs/
 ├── package.json
-├── tsconfig.json
-├── jest.config.js
-└── README.md
+├── pnpm-workspace.yaml
+└── tsconfig.json
 ```
 
 ## Core Components
 
-### 1. Data Models (`src/core/models/`)
+### 1. Data Models (shared)
 
 ```typescript
 // todo.ts
@@ -106,7 +51,7 @@ export interface TodoFilter {
 }
 ```
 
-### 2. Repository Layer (`src/core/repositories/`)
+### 2. Repository Layer (backend)
 
 ```typescript
 // base-repository.ts
@@ -126,7 +71,7 @@ export interface TodoRepository extends BaseRepository<Todo, CreateTodoInput, Up
 }
 ```
 
-### 3. Service Layer (`src/core/services/`)
+### 3. Service Layer (backend/shared)
 
 ```typescript
 // todo-service.ts
@@ -175,20 +120,17 @@ export class TodoService {
 
 ## Interface Implementations
 
-### 1. CLI Interface (`src/interfaces/cli/`)
+### 1. CLI Interface (planned `packages/cli`)
 
-Uses Commander.js for command parsing:
+Commander.js commands
+- `todo-app add "Buy" --description "Milk" [--priority high]`
+- `todo-app list [--status pending|completed] [--json]`
+- `todo-app edit <id> [--title ...] [--description ...] [--priority ...]`
+- `todo-app complete <id>` / `uncomplete <id>`
+- `todo-app delete <id>`
+- Mode selection: `todo-app web [--port 3000]` and `todo-app mcp`
 
-```bash
-# Commands
-todo add "Buy groceries" --description "Milk, bread, eggs"
-todo list --completed
-todo edit 123 --title "Buy organic groceries"
-todo done 123
-todo delete 123
-```
-
-### 2. Web Interface (`src/interfaces/web/`)
+### 2. Web Interface (packages/frontend + packages/backend)
 
 Express.js REST API with HTML frontend:
 
@@ -201,41 +143,11 @@ DELETE /api/todos/:id      # Delete todo
 PATCH  /api/todos/:id/done # Mark done/undone
 ```
 
-### 3. MCP Server (`src/interfaces/mcp/`)
+### 3. MCP Server (planned `packages/mcp`)
 
-Model Context Protocol server with tools:
-
-```json
-{
-  "tools": [
-    {
-      "name": "create_todo",
-      "description": "Create a new todo item",
-      "inputSchema": { ... }
-    },
-    {
-      "name": "list_todos",
-      "description": "List todo items with optional filtering",
-      "inputSchema": { ... }
-    },
-    {
-      "name": "update_todo",
-      "description": "Update an existing todo item",
-      "inputSchema": { ... }
-    },
-    {
-      "name": "delete_todo",
-      "description": "Delete a todo item",
-      "inputSchema": { ... }
-    },
-    {
-      "name": "toggle_todo_completion",
-      "description": "Mark todo as done or undone",
-      "inputSchema": { ... }
-    }
-  ]
-}
-```
+Tools
+- `create_todo`, `list_todos`, `update_todo`, `delete_todo`, `toggle_todo_completion`
+- Transport: stdio using `@modelcontextprotocol/sdk`
 
 ## Database Design
 
@@ -256,17 +168,12 @@ CREATE INDEX idx_todos_completed ON todos(completed);
 CREATE INDEX idx_todos_created_at ON todos(created_at);
 ```
 
-### Migration System
+### Migration System (planned)
 
-```typescript
-// Migration interface
-export interface Migration {
-  version: string;
-  name: string;
-  up(): Promise<void>;
-  down(): Promise<void>;
-}
-```
+- Table `migrations(version TEXT PRIMARY KEY, applied_at DATETIME)`
+- Apply SQL files from `packages/backend/src/database/migrations/*.sql` on startup
+- Filenames: `YYYYMMDDHHmm_description.sql`
+- Forward-only for this POC; add `down` later if needed
 
 ## Dependency Injection
 
@@ -290,7 +197,7 @@ export class Container {
   }
 }
 
-// Usage in each interface
+// Usage in each interface (CLI/Web/MCP)
 const container = new Container();
 container.register('database', () => new Database(config.databasePath));
 container.register('todoRepository', () => new SqliteTodoRepository(container.get('database')));
@@ -306,9 +213,9 @@ container.register('todoService', () => new TodoService(
 - **Language**: TypeScript
 - **Runtime**: Node.js
 - **Database**: SQLite with better-sqlite3
-- **CLI**: Commander.js
+- **CLI**: Commander.js (planned)
 - **Web**: Express.js + EJS templates
-- **MCP**: @modelcontextprotocol/sdk
+- **MCP**: @modelcontextprotocol/sdk (planned)
 - **Testing**: Jest
 - **Build**: TypeScript compiler
 - **Process Management**: PM2 (optional)
@@ -318,21 +225,17 @@ container.register('todoService', () => new TodoService(
 
 ### Scripts (package.json)
 
+Root/package scripts (illustrative)
 ```json
 {
   "scripts": {
-    "build": "tsc",
-    "dev:cli": "ts-node src/interfaces/cli/index.ts",
-    "dev:web": "ts-node src/interfaces/web/server.ts",
-    "dev:mcp": "ts-node src/interfaces/mcp/index.ts",
-    "start:cli": "node dist/interfaces/cli/index.js",
-    "start:web": "node dist/interfaces/web/server.js",
-    "start:mcp": "node dist/interfaces/mcp/index.js",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "migrate": "ts-node scripts/migrate.ts",
-    "lint": "eslint src/**/*.ts",
-    "format": "prettier --write src/**/*.ts"
+    "build": "pnpm -r build",
+    "dev": "pnpm -r --parallel dev",
+    "dev:backend": "pnpm --filter @todo-app/backend dev",
+    "dev:frontend": "pnpm --filter @todo-app/frontend dev",
+    "test": "pnpm -r test",
+    "type-check": "pnpm -r type-check",
+    "migrate": "pnpm --filter @todo-app/backend migrate"
   }
 }
 ```
@@ -347,8 +250,9 @@ COPY package*.json ./
 RUN npm ci --only=production
 
 FROM base AS cli
-COPY dist/interfaces/cli ./cli
-COPY dist/core ./core
+# Copy built CLI (packages/cli/dist)
+COPY dist/cli ./cli
+COPY dist/backend ./backend
 COPY dist/shared ./shared
 ENTRYPOINT ["node", "cli/index.js"]
 
@@ -360,8 +264,9 @@ EXPOSE 3000
 CMD ["node", "web/server.js"]
 
 FROM base AS mcp
-COPY dist/interfaces/mcp ./mcp
-COPY dist/core ./core
+# Copy built MCP server (packages/mcp/dist)
+COPY dist/mcp ./mcp
+COPY dist/backend ./backend
 COPY dist/shared ./shared
 CMD ["node", "mcp/index.js"]
 ```
@@ -375,9 +280,9 @@ CMD ["node", "mcp/index.js"]
 
 ### Integration Tests
 - API endpoints (web interface)
-- CLI commands
-- MCP tools
-- Database migrations
+- CLI commands (planned)
+- MCP tools (planned)
+- Database migrations (planned)
 
 ### E2E Tests
 - Full workflows across interfaces
@@ -387,10 +292,25 @@ CMD ["node", "mcp/index.js"]
 
 1. **Core First**: Implement data models, repositories, and services
 2. **Database Setup**: Create migrations and database layer
-3. **CLI Interface**: Implement as first interface (simpler)
-4. **Web Interface**: Add REST API and frontend
-5. **MCP Interface**: Implement MCP server
+3. **CLI Interface**: Implement single bin and commands (default + web + mcp)
+4. **Web Interface**: Orchestrate start via CLI `web`
+5. **MCP Interface**: Implement MCP stdio server and wire to CLI `mcp`
 6. **Testing**: Add comprehensive tests
 7. **Documentation**: Complete API docs and examples
+
+## Project structure & hygiene (Design → Product, Design → Execution)
+
+- .gitignore: add SQLite db files (`data/*.db`, `*.db-journal`) and migration caches
+- Packages to add: `packages/cli`, `packages/mcp`
+- Docs to update: README usage for `npx todo-app`, `web`, `mcp`; API docs for MCP tools
+
+## Backlog/Next steps mapping to Vision
+
+1. Add `packages/cli` with bin and Commander.js (NPX compatible)
+2. Implement CLI CRUD + `--json`; default mode
+3. Wire `web` command to backend start; optional `--open`
+4. Create `packages/mcp` with stdio tools; `mcp` command
+5. Replace in-memory DB with SQLite + migrations
+6. Tests across modes; E2E with shared DB
 
 This design ensures clear separation of concerns while maximizing code reuse across all three interfaces.

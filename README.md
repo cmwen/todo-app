@@ -4,15 +4,19 @@ A modern, real-time todo application built with Next.js, WebSockets, and TypeScr
 
 ## 🚀 Features
 
-- **Real-time synchronization**: Changes are instantly synced across all connected clients via WebSockets
-- **Modern UI**: Clean, responsive interface built with Next.js 15 App Router and Tailwind CSS
-- **Type-safe**: Full TypeScript support with shared types across frontend and backend
-- **Optimistic updates**: Immediate UI feedback with automatic rollback on errors
-- **Priority management**: Organize todos by priority (low, medium, high)
-- **Connection status**: Visual indicators for WebSocket connection state
-- **Comprehensive filtering**: Filter by completion status and sort by various criteria
-- **Monorepo structure**: Clean separation of concerns with pnpm workspaces
 
+
+## 📚 Docs
+
+This repository maintains design and implementation artifacts under `docs/`. Key documents:
+
+- `docs/vision.md` — project vision and success criteria [Vision → Product]
+- `docs/design.md` — design decisions and architecture [Design → Execution]
+- `docs/technical-design.md` — technical design and interfaces [Design → Execution]
+- `docs/implementation-summary.md` — implementation status and notes [Execution → QA]
+- `docs/governance_traceability.md` — traceability matrix, audit[text](../sdlc-agents/.github) notes, gates (generated)
+
+Please review `docs/governance_traceability.md` for current traceability status and any gating actions.
 ## 🏗️ Architecture
 
 ```

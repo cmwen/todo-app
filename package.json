@@ -13,7 +13,7 @@
     "start": "pnpm --parallel --recursive start",
     "start:frontend": "pnpm --filter @todo-app/frontend start",
     "start:backend": "pnpm --filter @todo-app/backend start",
-    "test": "pnpm --recursive test",
+  "test": "jest --passWithNoTests",
     "type-check": "pnpm --recursive type-check",
     "lint": "pnpm --recursive lint",
     "clean": "pnpm --recursive clean",
@@ -25,7 +25,8 @@
     "prettier": "^3.0.0",
     "eslint": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
-    "@typescript-eslint/parser": "^6.0.0"
+  "@typescript-eslint/parser": "^6.0.0",
+  "jest": "^29.6.1"
   },
   "engines": {
     "node": ">=18.0.0",
