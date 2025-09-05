@@ -1,6 +1,7 @@
 {
   "name": "@todo-app/frontend",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
   "description": "Next.js frontend with App Router and WebSocket integration",
   "scripts": {

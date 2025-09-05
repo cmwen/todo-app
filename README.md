@@ -1,183 +1,295 @@
-# TODO App - Modern Pnpm Workspace
+# Todo App
 
-A modern TODO application built with pnpm workspace monorepo architecture, featuring Next.js 15 App Router with real-time WebSocket synchronization.
+A modern, real-time todo application built with Next.js, WebSockets, and TypeScript in a pnpm monorepo structure.
 
-## Architecture Overview
+## 🚀 Features
+
+- **Real-time synchronization**: Changes are instantly synced across all connected clients via WebSockets
+- **Modern UI**: Clean, responsive interface built with Next.js 15 App Router and Tailwind CSS
+- **Type-safe**: Full TypeScript support with shared types across frontend and backend
+- **Optimistic updates**: Immediate UI feedback with automatic rollback on errors
+- **Priority management**: Organize todos by priority (low, medium, high)
+- **Connection status**: Visual indicators for WebSocket connection state
+- **Comprehensive filtering**: Filter by completion status and sort by various criteria
+- **Monorepo structure**: Clean separation of concerns with pnpm workspaces
+
+## 🏗️ Architecture
 
 ```
-todo-app/                          # Root workspace
+todo-app/
 ├── packages/
-│   ├── frontend/                  # Next.js 15 App Router with WebSocket
-│   ├── backend/                   # WebSocket server with SQLite
-│   └── shared/                    # Shared TypeScript types & utilities
-├── docs/                          # Project documentation
-└── pnpm-workspace.yaml           # Workspace configuration
+│   ├── shared/          # Shared TypeScript types and utilities
+│   ├── backend/         # WebSocket server with in-memory database
+│   └── frontend/        # Next.js App Router application
+├── docs/               # Documentation
+└── pnpm-workspace.yaml # Monorepo configuration
 ```
 
-## Tech Stack
+### Technology Stack
 
+- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
+- **Backend**: Node.js, WebSockets, TypeScript
+- **Database**: In-memory (easily replaceable with SQLite/PostgreSQL)
 - **Package Manager**: pnpm with workspaces
-- **Frontend**: Next.js 15 App Router, TypeScript, Tailwind CSS, shadcn/ui
-- **Backend**: Node.js WebSocket server, SQLite, better-sqlite3
-- **Real-time**: WebSocket communication for live updates
-- **Validation**: Zod schemas for type-safe data validation
+- **Type Validation**: Zod schemas
+- **Real-time Communication**: WebSocket with reconnection logic
 
-## Quick Start
+## 🛠️ Development Setup
 
 ### Prerequisites
 
 - Node.js 18+ 
-- pnpm 8+ (`npm install -g pnpm`)
+- pnpm 8+
 
 ### Installation
 
-```bash
-# Clone and install dependencies
-git clone <repo-url> todo-app
-cd todo-app
-pnpm install
+1. **Clone and install dependencies:**
+   ```bash
+   cd todo-app
+   pnpm install
+   ```
 
-# Build shared package
-pnpm --filter @todo-app/shared build
-```
+2. **Build shared package:**
+   ```bash
+   pnpm --filter @todo-app/shared build
+   ```
 
-### Development
+3. **Start the backend server:**
+   ```bash
+   pnpm --filter @todo-app/backend dev
+   # or: cd packages/backend && pnpm dev
+   ```
 
-```bash
-# Start all services in development mode
-pnpm dev
+4. **Start the frontend development server:**
+   ```bash
+   pnpm --filter @todo-app/frontend dev
+   # or: cd packages/frontend && pnpm dev
+   ```
 
-# Or start services individually
-pnpm dev:frontend  # Next.js on http://localhost:3000
-pnpm dev:backend   # WebSocket server on ws://localhost:8080
-```
+5. **Open the application:**
+   - Frontend: http://localhost:3000
+   - Backend WebSocket: ws://localhost:8080
+   - Backend Health Check: http://localhost:8081/health
 
-### Production Build
+### Environment Configuration
 
-```bash
-# Build all packages
-pnpm build
+1. **Frontend environment:**
+   ```bash
+   cd packages/frontend
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
+   ```
 
-# Start production servers
-pnpm start
-```
-
-## Features
-
-- ✅ **Real-time synchronization** - Changes appear instantly across all connected clients
-- ✅ **Modern UI** - Clean, responsive interface built with shadcn/ui components
-- ✅ **Type Safety** - End-to-end TypeScript with shared types and Zod validation
-- ✅ **Monorepo Architecture** - Clean separation with pnpm workspaces
-- ✅ **Optimistic Updates** - Immediate UI feedback with conflict resolution
-- ✅ **Auto-reconnection** - Robust WebSocket connection with exponential backoff
-
-## Project Structure
-
-### Frontend Package (`packages/frontend/`)
-- Next.js 15 App Router application
-- WebSocket client for real-time updates
-- Tailwind CSS + shadcn/ui components
-- Optimistic UI updates
-
-### Backend Package (`packages/backend/`)
-- WebSocket server handling client connections
-- SQLite database with better-sqlite3
-- Message validation and broadcasting
-- RESTful fallback API (optional)
-
-### Shared Package (`packages/shared/`)
-- Common TypeScript interfaces and types
-- Zod schemas for runtime validation
-- Utility functions and helpers
-- WebSocket message protocols
-
-## Development Workflow
-
-1. **Setup**: Initialize workspace and install dependencies
-2. **Shared First**: Build shared types and utilities
-3. **Backend**: Implement WebSocket server and database
-4. **Frontend**: Create UI with WebSocket integration
-5. **Testing**: End-to-end testing and validation
-
-## API Documentation
-
-### WebSocket Messages
-
-All WebSocket communication uses JSON messages with this structure:
-
-```typescript
-interface WebSocketMessage {
-  id: string;        // Unique message ID
-  type: string;      // Message type
-  payload: any;      // Message-specific data
-  timestamp: number; // Client timestamp
-}
-```
-
-### Client → Server Messages
-
-- `create_todo` - Create a new todo item
-- `update_todo` - Update existing todo
-- `delete_todo` - Delete a todo item
-- `list_todos` - Request todo list with filters
-
-### Server → Client Messages
-
-- `todo_created` - Broadcast new todo to all clients
-- `todo_updated` - Broadcast todo update
-- `todo_deleted` - Broadcast todo deletion
-- `todos_listed` - Response to list_todos request
-- `error` - Error message with details
-
-## Scripts Reference
+## 📦 Package Scripts
 
 ### Root Level Commands
 ```bash
-pnpm dev              # Start all packages in development
-pnpm build            # Build all packages
-pnpm test             # Run tests across all packages
-pnpm lint             # Lint all packages
-pnpm type-check       # TypeScript check all packages
+# Install all dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Run development servers for all packages
+pnpm dev
+
+# Run type checking across all packages
+pnpm type-check
+
+# Run linting across all packages
+pnpm lint
 ```
 
-### Package-Specific Commands
+### Frontend Package
 ```bash
-pnpm dev:frontend     # Start Next.js dev server
-pnpm dev:backend      # Start WebSocket server
-pnpm build:frontend   # Build Next.js for production
-pnpm build:backend    # Build backend for production
+cd packages/frontend
+
+# Development server with Turbopack
+pnpm dev
+
+# Production build
+pnpm build
+
+# Start production server
+pnpm start
+
+# Type checking
+pnpm type-check
+
+# ESLint
+pnpm lint
 ```
 
-## Configuration
+### Backend Package
+```bash
+cd packages/backend
+
+# Development server with hot reload
+pnpm dev
+
+# Production build
+pnpm build
+
+# Start production server
+pnpm start
+
+# Type checking
+pnpm type-check
+
+# ESLint
+pnpm lint
+```
+
+### Shared Package
+```bash
+cd packages/shared
+
+# Build TypeScript definitions
+pnpm build
+
+# Type checking
+pnpm type-check
+
+# ESLint
+pnpm lint
+```
+
+## 🔄 WebSocket API
+
+### Client → Server Messages
+
+```typescript
+// List all todos
+{ type: 'list_todos', payload: {} }
+
+// Create a new todo
+{ 
+  type: 'create_todo', 
+  payload: { 
+    title: string, 
+    description?: string, 
+    priority?: 'low' | 'medium' | 'high' 
+  } 
+}
+
+// Update an existing todo
+{ 
+  type: 'update_todo', 
+  payload: { 
+    id: string, 
+    title?: string, 
+    description?: string, 
+    completed?: boolean, 
+    priority?: 'low' | 'medium' | 'high' 
+  } 
+}
+
+// Delete a todo
+{ type: 'delete_todo', payload: { id: string } }
+```
+
+### Server → Client Messages
+
+```typescript
+// Todo list response
+{ type: 'todos_listed', payload: { todos: Todo[] } }
+
+// Todo created notification
+{ type: 'todo_created', payload: Todo }
+
+// Todo updated notification
+{ type: 'todo_updated', payload: Todo }
+
+// Todo deleted notification
+{ type: 'todo_deleted', payload: { id: string } }
+
+// Error response
+{ type: 'error', payload: { message: string } }
+```
+
+## 🎯 Key Features Explained
+
+### Real-time Synchronization
+- WebSocket connection with automatic reconnection
+- Exponential backoff retry strategy
+- Message queuing during disconnections
+- Optimistic updates with rollback on errors
+
+### Type Safety
+- Shared TypeScript types between frontend and backend
+- Zod validation for runtime type checking
+- Compile-time safety across the entire stack
+
+### Modern Development Experience
+- Next.js 15 with App Router
+- Turbopack for fast development builds
+- Hot reload for both frontend and backend
+- ESLint and TypeScript for code quality
+
+### Database Flexibility
+- In-memory database for development simplicity
+- Interface-based design for easy database swapping
+- Ready for SQLite, PostgreSQL, or any other database
+
+## 🧪 Testing the Application
+
+1. **Open multiple browser windows** to http://localhost:3000
+2. **Create todos** in one window and watch them appear in others
+3. **Mark todos as complete** and see real-time updates
+4. **Test connection resilience** by stopping/starting the backend
+5. **Check optimistic updates** by creating todos while disconnected
+
+## 🔧 Customization
+
+### Adding New Todo Fields
+1. Update types in `packages/shared/src/types/todo.ts`
+2. Modify database schema in `packages/backend/src/database/TodoDatabase.ts`
+3. Update UI components in `packages/frontend/src/components/`
+
+### Changing Database
+1. Replace `TodoDatabase` implementation in `packages/backend/src/database/`
+2. Maintain the same interface for seamless integration
+3. Update environment configuration as needed
+
+### UI Customization
+- Modify Tailwind CSS classes in components
+- Add new components in `packages/frontend/src/components/`
+- Update layouts in `packages/frontend/src/app/`
+
+## 🚀 Production Deployment
+
+### Backend Deployment
+```bash
+cd packages/backend
+pnpm build
+pnpm start
+```
+
+### Frontend Deployment
+```bash
+cd packages/frontend
+pnpm build
+pnpm start
+```
 
 ### Environment Variables
+- Set `NEXT_PUBLIC_WS_URL` to your production WebSocket server
+- Configure backend port and database settings
+- Set up proper CORS and security headers
 
-Create `.env.local` files in each package as needed:
+## 🤝 Contributing
 
-**Frontend** (`packages/frontend/.env.local`):
-```env
-NEXT_PUBLIC_WS_URL=ws://localhost:8080
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Ensure all packages build and type-check
+5. Test the application thoroughly
+6. Submit a pull request
 
-**Backend** (`packages/backend/.env`):
-```env
-PORT=8080
-DATABASE_PATH=./data/todos.db
-LOG_LEVEL=info
-```
+## 📄 License
 
-## Contributing
+MIT License - see LICENSE file for details.
 
-1. Follow the established monorepo structure
-2. Ensure shared types are updated for any data model changes
-3. Add appropriate TypeScript types and Zod schemas
-4. Test WebSocket communication thoroughly
-5. Update documentation for any new features
+---
 
-## Architecture Decisions
-
-See [docs/design.md](./docs/design.md) for detailed technical design decisions and trade-offs.
-
-## License
-
-MIT License - see [LICENSE](./LICENSE) file for details.
+Built with ❤️ using Next.js, WebSockets, and TypeScript
