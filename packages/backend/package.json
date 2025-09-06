@@ -1,0 +1,45 @@
+{
+	"name": "@todo-app/backend",
+	"version": "0.1.0",
+	"type": "module",
+	"main": "dist/server.js",
+	"types": "dist/server.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/server.js",
+			"types": "./dist/server.d.ts"
+		},
+		"./server": {
+			"import": "./dist/server.js",
+			"types": "./dist/server.d.ts"
+		},
+		"./database/connection": {
+			"import": "./dist/database/connection.js",
+			"types": "./dist/database/connection.d.ts"
+		},
+		"./services/todo-service": {
+			"import": "./dist/services/todo-service.js",
+			"types": "./dist/services/todo-service.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "tsc -b",
+		"dev": "tsx src/server.ts",
+		"clean": "rimraf dist",
+		"type-check": "tsc -p tsconfig.json --noEmit",
+		"lint": "echo 'no lint'",
+		"test": "vitest run -c vitest.config.ts"
+	},
+	"dependencies": {
+		"@todo-app/shared": "workspace:*",
+		"better-sqlite3": "^9.6.0",
+		"pino": "^9.0.0",
+		"ws": "^8.18.0",
+		"zod": "^3.23.8"
+	},
+	"devDependencies": {
+		"@types/better-sqlite3": "^7.6.13",
+		"@types/node": "^20.11.0",
+		"@types/ws": "^8.5.10"
+	}
+}

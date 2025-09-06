@@ -4,13 +4,32 @@
 # Node
 node_modules/
 dist/
-npm-debug.log
+npm-debug.log*
+pnpm-debug.log*
 
-# Python
-__pycache__/
-*.py[cod]
-env/
-venv/
-
-# VSCode
+# VSCode / IDEs
 .vscode/
+.idea/
+
+# Env files
+.env
+.env.*
+
+# SQLite databases
+data/*.db
+data/*.db-journal
+data/*.sqlite
+data/*.sqlite-journal
+*.db
+*.db-journal
+
+# Logs
+logs/
+*.log
+
+# Build artifacts
+coverage/
+*.tsbuildinfo
+
+# Backend migrations cache
+packages/backend/src/database/migrations/.cache

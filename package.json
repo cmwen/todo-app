@@ -1,0 +1,22 @@
+{
+	"name": "todo-app-monorepo",
+	"private": true,
+	"version": "0.1.0",
+	"packageManager": "pnpm@9.7.0",
+	"scripts": {
+		"build": "pnpm -r build",
+		"dev": "pnpm -r --parallel dev",
+		"test": "pnpm -r test",
+		"type-check": "pnpm -r type-check",
+		"lint": "pnpm -r lint",
+		"clean": "pnpm -r clean"
+	},
+	"devDependencies": {
+		"@types/node": "^20.11.0",
+		"vitest": "^2.0.5",
+		"typescript": "^5.4.0",
+		"ts-node": "^10.9.2",
+		"tsx": "^4.7.0",
+		"rimraf": "^5.0.0"
+	}
+}

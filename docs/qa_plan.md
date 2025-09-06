@@ -32,3 +32,29 @@ Acceptance criteria (examples linked from `docs/product_backlog.md`)
 	- AC-102.2: At least one unit test exists and passes in CI.
 
 See `docs/product_backlog.md` for story-to-AC mapping and owners.
+
+---
+
+Documentation Verification [QA → Governance]
+
+- Present: docs/vision.md, docs/product_backlog.md, docs/design.md, docs/execution_log.md, docs/qa_plan.md, docs/governance_traceability.md.
+- Cross-linking: design references product and execution; qa_plan references product and execution. Recommend adding quick links in README to all docs.
+- .gitignore: Present at root with Node/SQLite/IDE/logs coverage; recommends confirming frontend ignores if/when frontend package is added.
+
+Smoke Test Summary [QA → Execution]
+
+- CLI CRUD: PASS — add/list/update/delete against SQLite.
+- WS server start: PASS — server listens on :8090.
+- MCP server module: PASS — startMCP export detected. Functional end-to-end with an MCP client not exercised here.
+
+Edge Cases and Risks
+
+- Schema assets not bundled to dist (backend resolves to source paths) — acceptable for local monorepo; for publish, copy assets or embed schema.
+- No automated tests yet — add unit tests for TodoService and CLI golden tests.
+- Concurrency/race tests not implemented — plan needed.
+
+Next Steps
+
+- Add unit tests (TodoService CRUD, error cases).
+- Add CLI golden tests for --json outputs.
+- Add MCP tool smoke test via stdio harness.

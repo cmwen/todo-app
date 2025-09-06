@@ -1,0 +1,22 @@
+{
+	"name": "todo-app",
+	"version": "0.1.0",
+	"type": "module",
+	"bin": {
+		"todo-app": "bin/todo-app"
+	},
+	"scripts": {
+		"build": "echo 'no build for CLI'",
+		"dev": "node bin/todo-app",
+		"clean": "echo 'nothing to clean'",
+		"type-check": "echo 'no types'",
+		"lint": "echo 'no lint'"
+	},
+	"dependencies": {
+		"commander": "^11.1.0",
+		"@todo-app/backend": "workspace:*",
+		"@todo-app/shared": "workspace:*",
+		"@todo-app/mcp": "workspace:*",
+		"pino": "^9.0.0"
+	}
+}

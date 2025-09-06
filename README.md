@@ -1,4 +1,45 @@
 # todo-app
+# TODO App Monorepo
+
+Single CLI executable orchestrating modes: CLI (default), Web (web), and MCP (mcp). Core logic and types shared across packages.
+
+Quick start
+
+1) Install deps and build
+	- pnpm install
+	- pnpm -r build
+
+2) Use CLI
+	- List: node packages/cli/bin/todo-app list --json
+	- Add: node packages/cli/bin/todo-app add -t "My Task" -d "desc" -p high
+	- Update: node packages/cli/bin/todo-app update -i <id> -c true
+	- Delete: node packages/cli/bin/todo-app delete -i <id>
+
+3) Start WebSocket server (web mode)
+	- node packages/cli/bin/todo-app web --port 8080
+
+4) Start MCP stdio server (mcp mode)
+	- node packages/cli/bin/todo-app mcp
+
+Packages
+
+- packages/shared: Shared types
+- packages/backend: SQLite + WebSocket server + services
+- packages/cli: CLI orchestrator
+- packages/mcp: MCP stdio server
+
+Documentation
+
+- docs/vision.md
+- docs/product_backlog.md
+- docs/design.md
+- docs/execution_log.md
+- docs/qa_plan.md
+- docs/governance_traceability.md
+
+Testing
+
+- Backend unit tests (Vitest): pnpm -F @todo-app/backend test
 
 Quick start
 
