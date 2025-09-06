@@ -15,8 +15,9 @@ Quick start
 	- Update: node packages/cli/bin/todo-app update -i <id> -c true
 	- Delete: node packages/cli/bin/todo-app delete -i <id>
 
-3) Start WebSocket server (web mode)
-	- node packages/cli/bin/todo-app web --port 8080
+3) Start Web UI (web mode)
+	- node packages/cli/bin/todo-app web --port 8080 --ui-port 3000
+	- This starts the backend WebSocket on :8080 and Next.js UI on :3000, opens your browser, and passes NEXT_PUBLIC_WS_URL.
 
 4) Start MCP stdio server (mcp mode)
 	- node packages/cli/bin/todo-app mcp

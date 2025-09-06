@@ -47,6 +47,11 @@ Smoke Test Summary [QA → Execution]
 - WS server start: PASS — server listens on :8090.
 - MCP server module: PASS — startMCP export detected. Functional end-to-end with an MCP client not exercised here.
 
+- Web UI: PENDING — Start via `node packages/cli/bin/todo-app web --port 8080 --ui-port 3000`.
+	- Expect the browser to open to http://localhost:3000
+	- Add a todo using the input. It should appear in the list and persist after refresh.
+	- Toggle completion checkbox and observe update.
+
 Edge Cases and Risks
 
 - Schema assets not bundled to dist (backend resolves to source paths) — acceptable for local monorepo; for publish, copy assets or embed schema.

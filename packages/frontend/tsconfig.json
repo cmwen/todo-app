@@ -1,0 +1,39 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "jsx": "preserve",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": [
+      "node",
+      "react"
+    ],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "incremental": true,
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+  },
+  "include": [
+    "app/**/*",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+  ],
+  "references": [],
+  "exclude": [
+    "node_modules"
+  ]
+}

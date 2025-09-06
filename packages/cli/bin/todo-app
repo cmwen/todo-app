@@ -4,6 +4,9 @@ import pino from 'pino';
 import { startServer } from '@todo-app/backend/server';
 import { DatabaseConnection } from '@todo-app/backend/database/connection';
 import { TodoService } from '@todo-app/backend/services/todo-service';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const program = new Command();
 program
@@ -27,14 +30,50 @@ function withService(dbPath, fn) {
 
 program
 	.command('web')
-	.description('Start WebSocket backend server')
-	.option('-p, --port <port>', 'Port', (v) => parseInt(v, 10), 8080)
-			.action((opts, cmd) => {
-				const parent = cmd.parent;
+	.description('Start WebSocket backend server and Next.js UI')
+	.option('-p, --port <port>', 'Backend WS port', (v) => parseInt(v, 10), 8080)
+	.option('--ui-port <port>', 'Frontend UI port', (v) => parseInt(v, 10), 3000)
+	.option('--no-open', 'Do not open browser')
+	.action((opts, cmd) => {
+		const parent = cmd.parent;
 		const dbPath = parent.getOptionValue('db');
-		const { port } = opts;
+		const { port, uiPort } = opts;
+
+		// 1) Start backend WS server in-process
 		startServer({ port, dbPath });
-		logger.info(`Server started on ws://localhost:${port}`);
+		logger.info(`Backend started on ws://localhost:${port}`);
+
+		// 2) Start Next.js dev server for the frontend
+		const __filename = fileURLToPath(import.meta.url);
+		const rootDir = path.resolve(path.dirname(__filename), '../../..');
+		const env = {
+			...process.env,
+			PORT: String(uiPort),
+			NEXT_PUBLIC_WS_URL: `ws://localhost:${port}`,
+			COREPACK_ENABLE_DOWNLOAD_PROMPT: '0',
+		};
+		const frontend = spawn('pnpm', ['-F', '@todo-app/frontend', 'dev'], {
+			cwd: rootDir,
+			env,
+			stdio: 'inherit',
+		});
+		frontend.on('error', (e) => {
+			logger.error(e, 'Failed to start frontend');
+		});
+		frontend.on('exit', (code) => {
+			logger.info({ code }, 'Frontend exited');
+			process.exit(code ?? 0);
+		});
+
+		// 3) Optionally open the browser (best-effort)
+		if (opts.open !== false) {
+			const url = `http://localhost:${uiPort}`;
+			let opener;
+			if (process.platform === 'darwin') opener = spawn('open', [url], { stdio: 'ignore', detached: true });
+			else if (process.platform === 'win32') opener = spawn('cmd', ['/c', 'start', '""', url], { stdio: 'ignore', detached: true });
+			else opener = spawn('xdg-open', [url], { stdio: 'ignore', detached: true });
+			opener.unref?.();
+		}
 	});
 
 program
