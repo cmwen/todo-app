@@ -1,57 +1,34 @@
 # QA Plan
 
-This QA plan documents acceptance criteria, test scenarios, regression risks, and documentation verification for the release. It is authored to satisfy the QA Agent prompt requirements.
+Purpose
 
-## Acceptance criteria (mapped to Vision)
+Define acceptance criteria and testing approach for releases.
 
-1. Real-time todo creation/updates across clients — acceptance: creating a todo in one client is reflected to others (covered by integration/E2E). [Vision → Frontend/Backend]
-2. Persistent data storage for release scope: for now the system uses in-memory DB; acceptance: backend health endpoint responds with 200. (smoke test)
-3. Optimistic updates with rollback — acceptance: UI shows optimistic state and rolls back on server error (manual/E2E).
-4. Type safety across packages — acceptance: shared types validate sample payloads (unit test)
+Acceptance criteria template
 
-## Minimal automated tests (this milestone)
+- ID: AC-001
+- Description: Functionality behaves as specified in `docs/design.md`.
+- Tests: unit + integration + manual acceptance steps.
 
-- Backend smoke test: GET /health returns 200 (packages/backend/tests/smoke/health.test.ts)
-- Shared unit test: validate Todo type parsing/validation using shared helpers (packages/shared/tests/unit/todo-types.test.ts)
 
-## Test scenarios (happy path + edge cases)
+Quick checklist
 
-- Happy: create todo → server returns created object with id and timestamps.
-- Edge: create todo with missing title → server returns an error (validation).
-- Edge: update non-existent todo → server returns 404 or error.
-- Edge: simultaneous updates → last-write-wins (document expected behavior in technical-design).
+- Unit tests for new features (automated)
+- Basic smoke tests for critical flows
+- QA sign-off recorded in `docs/execution_log.md`
 
-## Regression risks
+Acceptance criteria (examples linked from `docs/product_backlog.md`)
 
-- No automated tests present for critical paths — risk increased. Mitigation: add smoke tests and CI gating.
-- Shared types drift between packages — mitigate with unit tests and type-check CI.
+- T100 (Initialize .gitignore and base structure):
+	- AC-100.1: `.gitignore` present and ignores OS/IDE/build artifacts.
+	- AC-100.2: `src/`, `tests/`, `docs/` exist.
+	- AC-100.3: README contains quick start and doc links.
 
-## Documentation verification checklist
+- T101 (Governance docs skeleton):
+	- AC-101.1: `docs/product_backlog.md`, `docs/execution_log.md`, `docs/qa_plan.md`, and `docs/governance_traceability.md` exist and cross-reference each other.
 
-- `docs/vision.md` — present ✅
-- `docs/product_backlog.md` — MISSING ❌ (Product owner must add)
-- `docs/design.md` — present ✅
-- `docs/execution_log.md` — MISSING ❌ (Execution owner to maintain)
-- `docs/qa_plan.md` — present ✅
-- `docs/governance_traceability.md` — present ✅
+- T102 (CI & tests):
+	- AC-102.1: CI workflow executes smoke test or unit tests.
+	- AC-102.2: At least one unit test exists and passes in CI.
 
-If any of the above are missing, the release should be blocked unless a waiver is recorded in `docs/governance_traceability.md`.
-
-## Test runner & quick commands
-
-This repo uses Jest for minimal tests. From the repo root:
-
-```bash
-pnpm install
-pnpm test
-```
-
-## Reporting & labels
-
-- Use labels for findings: `[QA → Execution: Bug]`, `[QA → Design: Flaw]`, `[QA → Governance]`.
-- Log issues in GitHub referencing the failing test and the acceptance criteria mapping.
-
-## Owner & cadence
-
-- QA owner: TBD
-- Run smoke tests on each PR and nightly full test suite.
+See `docs/product_backlog.md` for story-to-AC mapping and owners.
