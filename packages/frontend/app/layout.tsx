@@ -1,4 +1,7 @@
 import React from 'react';
+import './globals.css';
+import { ThemeToggle } from './theme-toggle';
+
 export const metadata = {
   title: 'Todo App',
   description: 'Simple todo app with WebSocket backend',
@@ -6,12 +9,31 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body style={{ fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif', margin: 0 }}>
-        <main style={{ maxWidth: 800, margin: '2rem auto', padding: '0 1rem' }}>
-          <h1>Todo App</h1>
-          {children}
-        </main>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            try {
+              const savedTheme = localStorage.getItem('theme');
+              const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+              const theme = savedTheme || systemTheme;
+              if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+              }
+            } catch (e) {}
+          `
+        }} />
+      </head>
+      <body>
+        <div className="min-h-screen bg-background">
+          <main className="container mx-auto max-w-4xl p-6">
+            <div className="flex items-center justify-between mb-8">
+              <h1 className="text-3xl font-bold text-foreground">Todo App</h1>
+              <ThemeToggle />
+            </div>
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
