@@ -29,7 +29,7 @@ This document explains how to set up automated publishing of the CLI package to 
 
 #### Method A: Automatic (on Git Tag)
 
-Push a git tag with the format `cli-v*.*.*`:
+Push a git tag with the format `cli-v*`:
 
 ```bash
 # Example: Release version 1.0.0

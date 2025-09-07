@@ -3,7 +3,9 @@ name: Publish CLI to npm
 on:
   push:
     tags:
-      - 'cli-v*.*.*'
+      - 'cli-v*'
+  release:
+    types: [published]
   workflow_dispatch:
     inputs:
       version:
@@ -14,6 +16,8 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Only run for CLI releases or manual dispatch
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/cli-v')
     
     steps:
       - name: Checkout repository
@@ -32,7 +36,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared packages
-        run: pnpm run build --filter @todo-app/shared
+        run: pnpm --filter @todo-app/shared build
 
       - name: Extract version from tag
         if: github.event_name == 'push'
@@ -84,13 +88,11 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release
-        if: github.event_name == 'push'
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: CLI Release ${{ steps.extract_version.outputs.version }}
+          tag_name: ${{ github.ref_name }}
+          name: CLI Release ${{ steps.extract_version.outputs.version }}
           body: |
             ## CLI Release ${{ steps.extract_version.outputs.version }}
             
@@ -105,3 +107,5 @@ jobs:
             ```
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
