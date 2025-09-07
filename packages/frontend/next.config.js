@@ -1,1 +1,9 @@
-// Not used. Use next.config.cjs instead.
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: [],
+  },
+};
+
+module.exports = nextConfig;
