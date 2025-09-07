@@ -1,16 +1,34 @@
 {
-	"name": "todo-app",
+	"name": "@cmwen/todo-app",
 	"version": "0.1.0",
+	"description": "A simple CLI todo application",
+	"keywords": ["todo", "cli", "task", "productivity"],
+	"author": "cmwen",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/cmwen/todo-app.git",
+		"directory": "packages/cli"
+	},
+	"bugs": {
+		"url": "https://github.com/cmwen/todo-app/issues"
+	},
+	"homepage": "https://github.com/cmwen/todo-app#readme",
 	"type": "module",
 	"bin": {
 		"todo-app": "bin/todo-app"
 	},
+	"files": [
+		"bin/**/*",
+		"data/**/*"
+	],
 	"scripts": {
 		"build": "echo 'no build for CLI'",
 		"dev": "node bin/todo-app",
 		"clean": "echo 'nothing to clean'",
 		"type-check": "echo 'no types'",
-		"lint": "echo 'no lint'"
+		"lint": "echo 'no lint'",
+		"prepublishOnly": "echo 'Preparing for publish'"
 	},
 	"dependencies": {
 		"commander": "^11.1.0",
@@ -18,5 +36,8 @@
 		"@todo-app/shared": "workspace:*",
 		"@todo-app/mcp": "workspace:*",
 		"pino": "^9.0.0"
+	},
+	"publishConfig": {
+		"access": "public"
 	}
 }

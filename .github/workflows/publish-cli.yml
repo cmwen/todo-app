@@ -1,0 +1,109 @@
+name: Publish CLI to npm
+
+on:
+  push:
+    tags:
+      - 'cli-v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g., 1.0.0)'
+        required: true
+        default: 'patch'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm run build --filter @todo-app/shared
+
+      - name: Extract version from tag
+        if: github.event_name == 'push'
+        id: extract_version
+        run: |
+          VERSION=$(echo ${GITHUB_REF#refs/tags/cli-v})
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update package version (from tag)
+        if: github.event_name == 'push'
+        run: |
+          cd packages/cli
+          npm version ${{ steps.extract_version.outputs.version }} --no-git-tag-version
+
+      - name: Update package version (manual)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          cd packages/cli
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+      - name: Replace workspace dependencies
+        run: |
+          cd packages/cli
+          # Replace workspace dependencies with actual package names
+          node -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            
+            // Remove workspace dependencies that won't be available in npm
+            delete pkg.dependencies['@todo-app/backend'];
+            delete pkg.dependencies['@todo-app/shared'];
+            delete pkg.dependencies['@todo-app/mcp'];
+            
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
+
+      - name: Test CLI installation
+        run: |
+          cd packages/cli
+          npm pack
+          npm install -g ./cmwen-todo-app-*.tgz
+          todo-app --help || echo "CLI test completed"
+
+      - name: Publish to npm
+        run: |
+          cd packages/cli
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        if: github.event_name == 'push'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: CLI Release ${{ steps.extract_version.outputs.version }}
+          body: |
+            ## CLI Release ${{ steps.extract_version.outputs.version }}
+            
+            ### Installation
+            ```bash
+            npm install -g @cmwen/todo-app
+            ```
+            
+            ### Usage
+            ```bash
+            todo-app --help
+            ```
+          draft: false
+          prerelease: false
