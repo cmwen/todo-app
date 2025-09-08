@@ -1,6 +1,6 @@
 {
 	"name": "@cmwen/todo-app",
-	"version": "0.1.0",
+	"version": "0.1.2",
 	"description": "A simple CLI todo application",
 	"keywords": ["todo", "cli", "task", "productivity"],
 	"author": "cmwen",
