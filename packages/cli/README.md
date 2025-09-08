@@ -12,25 +12,78 @@ npm install -g @cmwen/todo-app
 
 ## Quick Start
 
-### CLI Mode (Default)
-After installation, you can use the `todo-app` command directly:
+### @cmwen/todo-app - Bundled CLI
+
+This is a self-contained, bundled command-line interface for the todo app. It's built using Vite and includes all dependencies except Node.js built-ins bundled into a single executable file.
+
+## Features
+
+- ✅ Single bundled executable file (~12KB gzipped)
+- ✅ All workspace dependencies (@todo-app/*) bundled
+- ✅ External npm dependencies kept as runtime dependencies
+- ✅ Self-contained database schema (no external SQL files needed)
+- ✅ Works from any directory
+- ✅ Includes WebSocket server, MCP server, and CRUD operations
+
+## Build & Development
 
 ```bash
-# List todos (with JSON output)
-todo-app list --json
+# Build the bundled CLI
+pnpm build
 
-# Add a new todo
-todo-app add -t "My Task" -d "Task description" -p high
+# Development (uses non-bundled version)
+pnpm dev
 
-# Update a todo (mark as complete)
-todo-app update -i <id> -c true
+# Clean build artifacts
+pnpm clean
+```
+
+## Usage
+
+Once built, the CLI is available at `dist/todo-app`:
+
+```bash
+# Add a todo
+./dist/todo-app add -t "My task" -p high
+
+# List todos  
+./dist/todo-app list
+
+# Update a todo as completed
+./dist/todo-app update -i <todo-id> -c true
 
 # Delete a todo
-todo-app delete -i <id>
+./dist/todo-app delete -i <todo-id>
 
-# Show help
-todo-app --help
+# Start web server (backend + frontend)
+./dist/todo-app web
+
+# Start MCP server (limited functionality in bundled mode)
+./dist/todo-app mcp
+
+# Help
+./dist/todo-app --help
 ```
+
+## Publishing
+
+The package is configured to publish to npm as `@cmwen/todo-app`. To publish:
+
+```bash
+# Ensure you're logged in to npm
+npm login
+
+# Publish (will run prepublishOnly script to build first)
+pnpm publish
+```
+
+## Technical Details
+
+- **Bundler**: Vite with Rollup
+- **Target**: Node.js 18+ ES Modules
+- **Bundle size**: ~388KB (~12KB gzipped)
+- **External deps**: commander, pino, better-sqlite3, ws, zod, @modelcontextprotocol/sdk
+- **Bundled**: All @todo-app workspace packages + their TypeScript sources
 
 ### Web UI Mode
 Start both backend WebSocket server and Next.js frontend:

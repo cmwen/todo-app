@@ -1,0 +1,154 @@
+import { Command } from 'commander';
+import pino from 'pino';
+import { startServer } from './server.js';
+import { DatabaseConnection } from './database-connection.js';
+import { TodoService } from '@todo-app/backend/services/todo-service';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const program = new Command();
+program
+	.name('todo-app')
+	.description('Todo app CLI and orchestrator')
+	.option('--db <path>', 'Path to SQLite DB', 'data/todo.db')
+	.option('--json', 'Output JSON', false)
+	.option('--log-level <level>', 'Log level', 'info');
+
+const logger = pino({ level: process.env.LOG_LEVEL ?? 'info' });
+
+function withService(dbPath: string, fn: (svc: TodoService) => any) {
+	const conn = new DatabaseConnection({ dbPath });
+	const svc = new TodoService(conn.db);
+	try {
+		return fn(svc);
+	} finally {
+		conn.close();
+	}
+}
+
+program
+	.command('web')
+	.description('Start WebSocket backend server and Next.js UI')
+	.option('-p, --port <port>', 'Backend WS port', (v) => parseInt(v, 10), 8080)
+	.option('--ui-port <port>', 'Frontend UI port', (v) => parseInt(v, 10), 3000)
+	.option('--no-open', 'Do not open browser')
+	.action((opts, cmd) => {
+		const parent = cmd.parent;
+		const dbPath = parent.getOptionValue('db');
+		const { port, uiPort } = opts;
+
+		// 1) Start backend WS server in-process
+		startServer({ port, dbPath });
+		logger.info(`Backend started on ws://localhost:${port}`);
+
+		// 2) Start Next.js dev server for the frontend
+		const __filename = fileURLToPath(import.meta.url);
+		const rootDir = path.resolve(path.dirname(__filename), '../../..');
+		const env = {
+			...process.env,
+			PORT: String(uiPort),
+			NEXT_PUBLIC_WS_URL: `ws://localhost:${port}`,
+			COREPACK_ENABLE_DOWNLOAD_PROMPT: '0',
+		};
+		const frontend = spawn('pnpm', ['-F', '@todo-app/frontend', 'dev'], {
+			cwd: rootDir,
+			env,
+			stdio: 'inherit',
+		});
+		frontend.on('error', (e) => {
+			logger.error(e, 'Failed to start frontend');
+		});
+		frontend.on('exit', (code) => {
+			logger.info({ code }, 'Frontend exited');
+			process.exit(code ?? 0);
+		});
+
+		// 3) Optionally open the browser (best-effort)
+		if (opts.open !== false) {
+			const url = `http://localhost:${uiPort}`;
+			let opener: any;
+			if (process.platform === 'darwin') opener = spawn('open', [url], { stdio: 'ignore', detached: true });
+			else if (process.platform === 'win32') opener = spawn('cmd', ['/c', 'start', '""', url], { stdio: 'ignore', detached: true });
+			else opener = spawn('xdg-open', [url], { stdio: 'ignore', detached: true });
+			opener.unref?.();
+		}
+	});
+
+program
+	.command('mcp')
+	.description('Start MCP stdio server')
+	.action(async (opts, cmd) => {
+		const parent = cmd.parent;
+		const dbPath = parent.getOptionValue('db');
+		const { startMCP } = await import('./mcp.js');
+		await startMCP({ dbPath });
+	});
+
+program
+	.command('add')
+	.description('Add a todo')
+	.requiredOption('-t, --title <title>', 'Title')
+	.option('-d, --description <desc>', 'Description')
+	.option('-p, --priority <priority>', 'Priority (low|medium|high)', 'medium')
+	.action((opts, cmd) => {
+		const parent = cmd.parent;
+		const outJson = parent.getOptionValue('json');
+		const dbPath = parent.getOptionValue('db');
+		const todo = withService(dbPath, (svc) => svc.create(opts));
+		if (outJson) console.log(JSON.stringify(todo, null, 2));
+		else console.log(`Created: ${todo.id} '${todo.title}' [${todo.priority}]`);
+	});
+
+program
+	.command('list')
+	.description('List todos')
+	.action((opts, cmd) => {
+		const parent = cmd.parent;
+		const outJson = parent.getOptionValue('json');
+		const dbPath = parent.getOptionValue('db');
+		const todos = withService(dbPath, (svc) => svc.list());
+		if (outJson) console.log(JSON.stringify(todos, null, 2));
+		else for (const t of todos) console.log(`${t.completed ? '✔' : ' '} ${t.id} ${t.title} [${t.priority}]`);
+	});
+
+program
+	.command('update')
+	.description('Update a todo')
+	.requiredOption('-i, --id <id>', 'Todo ID')
+	.option('-t, --title <title>', 'Title')
+	.option('-d, --description <desc>', 'Description')
+	.option('-c, --completed <bool>', 'Completed (true|false)')
+	.option('-p, --priority <priority>', 'Priority (low|medium|high)')
+	.action((opts, cmd) => {
+		const parent = cmd.parent;
+		const outJson = parent.getOptionValue('json');
+		const dbPath = parent.getOptionValue('db');
+		if (typeof opts.completed !== 'undefined') {
+			opts.completed = String(opts.completed).toLowerCase() === 'true';
+		}
+		const todo = withService(dbPath, (svc) => svc.update(opts));
+		if (outJson) console.log(JSON.stringify(todo, null, 2));
+		else console.log(`Updated: ${todo.id} -> '${todo.title}' ${todo.completed ? '(completed)' : ''}`);
+	});
+
+program
+	.command('delete')
+	.description('Delete a todo')
+	.requiredOption('-i, --id <id>', 'Todo ID')
+	.action((opts, cmd) => {
+		const parent = cmd.parent;
+		const outJson = parent.getOptionValue('json');
+		const dbPath = parent.getOptionValue('db');
+		withService(dbPath, (svc) => svc.delete(opts.id));
+		if (outJson) console.log(JSON.stringify({ deleted: opts.id }));
+		else console.log(`Deleted: ${opts.id}`);
+	});
+
+// Default to help when no args
+if (process.argv.length <= 2) {
+	// run interactive mode later; for now: list
+	process.argv.push('list');
+}
+
+program.parseAsync(process.argv);
